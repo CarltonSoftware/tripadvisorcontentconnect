@@ -1,0 +1,24 @@
+{
+  "name": "tripadvisor_cc_apiclient",
+  "version": "0.0.1",
+  "description": "This is a Rest/Promise wrapper for the tripadvisor content connect api.",
+  "main": "index.js",
+  "scripts": {
+    "test": "cross-env NODE_ENV=test mocha -R spec tests/*.js",
+    "postinstall": "npm link plato-js-client"
+  },
+  "author": "Tabs Software",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^5.0.1",
+    "js-sha512": "^0.7.1",
+    "locutus": "^2.0.9",
+    "request": "^2.85.0",
+    "request-promise-native": "^1.0.5",
+    "to-iso-string": "0.0.2"
+  },
+  "devDependencies": {
+    "cross-env": "^5.1.4",
+    "mocha": "^5.0.5"
+  }
+}
