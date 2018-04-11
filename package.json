@@ -5,13 +5,14 @@
   "main": "index.js",
   "scripts": {
     "test": "cross-env NODE_ENV=test mocha -R spec tests/*.js",
+    "sandbox": "cross-env NODE_ENV=test node sandbox.js",
     "postinstall": "npm link plato-js-client"
   },
   "author": "Tabs Software",
   "license": "ISC",
   "dependencies": {
+    "crypto-js": "^3.1.9-1",
     "dotenv": "^5.0.1",
-    "js-sha512": "^0.7.1",
     "locutus": "^2.0.9",
     "request": "^2.85.0",
     "request-promise-native": "^1.0.5",

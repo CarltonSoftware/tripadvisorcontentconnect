@@ -1,6 +1,6 @@
 let rp = require('request-promise-native');
 let l = require('locutus');
-let sha512 = require('js-sha512').sha512;
+let CryptoJS = require('crypto-js');
 let toISOString = require('to-iso-string');
 
 let TripAdvisorClient = (() => {
@@ -8,7 +8,9 @@ let TripAdvisorClient = (() => {
     options = {
       base_url: 'https://rentals.tripadvisor.com/api/property/v1',
       client_id: '',
-      secret: ''
+      secret: '',
+      returnRequestBody: false,
+      resolveWithFullResponse: false
     };
 
   function createInstance(args) {
@@ -71,17 +73,17 @@ let TripAdvisorClient = (() => {
         body = '';
       }
 
-      let hash = sha512(
+      let hash = CryptoJS.SHA512(
         [
           method,
           _path(url),
           params,
           ts,
-          sha512(body)
+          CryptoJS.SHA512(body)
         ].join("\n")
-      ).toLowerCase();
+      ).toString().toLowerCase();
 
-      let sig = sha512.hmac(hash, getOptions().secret);
+      let sig = CryptoJS.HmacSHA512(hash, getOptions().secret).toString();
 
       return sig;
     };
@@ -96,6 +98,7 @@ let TripAdvisorClient = (() => {
      */
     let _auth_header = (method, url, params, body) => {
       let ts = timestamp();
+
       return [
         'VRS-HMAC-SHA512 timestamp=' + ts,
         'client=' + getOptions().client_id,
@@ -133,9 +136,14 @@ let TripAdvisorClient = (() => {
             (Object.keys(body).length > 0) ? JSON.stringify(body) : ''
           ),
           'Content-Type': 'application/json'
-        },
-        json: true // Automatically parses the JSON string in the response
+        }
       };
+
+      if (getOptions().resolveWithFullResponse === true) {
+        r.resolveWithFullResponse = true;
+      } else {
+        r.json = true;
+      }
 
       if (Object.keys(body).length > 0) {
         r.body = body;
@@ -143,6 +151,22 @@ let TripAdvisorClient = (() => {
 
       return r;
     };
+
+    /**
+     * Perform the request
+     *
+     * @param {Object}  request
+     * @param {Boolean} returnRequestBody
+     *
+     * @return {Object}
+     */
+    let _doRequest = (request, returnRequestBody) => {
+      if (returnRequestBody === true || getOptions().returnRequestBody === true) {
+        return request;
+      }
+
+      return rp(request);
+    }
 
     /**
      * @return {Object}
@@ -178,16 +202,17 @@ let TripAdvisorClient = (() => {
     };
 
     /**
+     * Get a url
+     *
      * @param {String} url
      * @param {Object} params
      *
-     * @return {Object}
+     * @return {Promise}
      */
-    this._get = (url, params) => {
-      return _request(
-        'GET',
+    this.get = (url, params) => {
+      return _get(
         url,
-        (params) ? params.query : undefined
+        params
       );
     };
 
@@ -199,19 +224,27 @@ let TripAdvisorClient = (() => {
      *
      * @return {Promise}
      */
-    this.get = (url, params) => {
-      return rp(_get(url, params));
+    this._get = (url, params) => {
+      return _doRequest(
+        _request(
+          'GET',
+          url,
+          (params) ? params.query : undefined
+        ),
+        (params) ? params.returnRequestBody : undefined
+      );
     };
 
     /**
+     * Put data to a url
+     *
      * @param {String} url
      * @param {Object} params
      *
      * @return {Promise}
      */
-    this._put = (url, params) => {
-      return _request(
-        'PUT',
+    this.put = (url, params) => {
+      return _put(
         url,
         (params) ? params.query : undefined,
         (params) ? params.body : undefined
@@ -226,8 +259,16 @@ let TripAdvisorClient = (() => {
      *
      * @return {Promise}
      */
-    this.put = (url, params) => {
-      return rp(_put(url, params));
+    this._put = (url, params) => {
+      return _doRequest(
+        _request(
+          'PUT',
+          url,
+          (params) ? params.query : undefined,
+          (params) ? params.body : undefined
+        ),
+        (params) ? params.returnRequestBody : undefined
+      );
     };
 
     return this;

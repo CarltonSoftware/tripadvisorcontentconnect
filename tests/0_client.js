@@ -45,12 +45,12 @@ describe('test timestamp', function() {
 
 describe('check requests', function() {
   it('Check _get request object', function() {
-    console.assert(tr._get('abc').uri === (tr.base_url() + '/abc'));
+    console.assert(tr._get('abc', { returnRequestBody: true }).uri === (tr.base_url() + '/abc'));
   });
   it('Check _get request object with params', function() {
-    console.assert(tr._get('abc', { query: { foo: 'bar' } }).qs.foo === 'bar');
+    console.assert(tr._get('abc', { returnRequestBody: true, query: { foo: 'bar' } }).qs.foo === 'bar');
   });
   it('Check _put request object', function() {
-    console.assert(tr._put('abc', { body: { body: '123' } }).body.body === '123');
+    console.assert(tr._put('abc', { returnRequestBody: true, body: { body: '123' } }).body.body === '123');
   });
 });

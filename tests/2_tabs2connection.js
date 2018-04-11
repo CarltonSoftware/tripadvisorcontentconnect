@@ -58,9 +58,10 @@ describe('check tabs2 connection', function() {
                 var tr = client.connect({
                   base_url: 'https://httpbin.org/put',
                   client_id: 123,
-                  secret: 'abc'
+                  secret: 'abc',
+                  returnRequestBody: true
                 });
-                update._updateBookedRanges(12345, 67890, data.PropertyBranding).then(function(data) {
+                update.updateBookedRanges(12345, 67890, data.PropertyBranding).then(function(data) {
                   console.assert(data.uri === 'https://httpbin.org/put/12345/67890/availability');
                 });
               });
