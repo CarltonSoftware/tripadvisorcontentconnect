@@ -69,10 +69,6 @@ let TripAdvisorClient = (() => {
      * @return {String}
      */
     let _signature = (method, url, params, body, ts) => {
-      if (!body) {
-        body = '';
-      }
-
       let hash = CryptoJS.SHA512(
         [
           method,
@@ -139,14 +135,14 @@ let TripAdvisorClient = (() => {
         }
       };
 
-      if (getOptions().resolveWithFullResponse === true) {
+      if (getOptions().resolveWithFullResponse === true || method !== 'GET') {
         r.resolveWithFullResponse = true;
       } else {
         r.json = true;
       }
 
       if (Object.keys(body).length > 0) {
-        r.body = body;
+        r.body = JSON.stringify(body);
       }
 
       return r;
@@ -246,8 +242,7 @@ let TripAdvisorClient = (() => {
     this.put = (url, params) => {
       return _put(
         url,
-        (params) ? params.query : undefined,
-        (params) ? params.body : undefined
+        params
       );
     };
 
