@@ -51,6 +51,6 @@ describe('check requests', function() {
     console.assert(tr._get('abc', { returnRequestBody: true, query: { foo: 'bar' } }).qs.foo === 'bar');
   });
   it('Check _put request object', function() {
-    console.assert(tr._put('abc', { returnRequestBody: true, body: { body: '123' } }).body.body === '123');
+    console.assert(JSON.parse(tr._put('abc', { returnRequestBody: true, body: { body: '123' } }).body).body === '123');
   });
 });
