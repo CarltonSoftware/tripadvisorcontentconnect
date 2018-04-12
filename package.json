@@ -11,6 +11,7 @@
   "author": "Tabs Software",
   "license": "ISC",
   "dependencies": {
+    "chai": "^4.1.2",
     "crypto-js": "^3.1.9-1",
     "dotenv": "^5.0.1",
     "locutus": "^2.0.9",

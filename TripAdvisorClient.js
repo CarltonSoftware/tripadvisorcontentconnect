@@ -123,6 +123,7 @@ let TripAdvisorClient = (() => {
 
       var r = {
         uri: _url,
+        method: method,
         qs: params,
         headers: {
           'Authorization': _auth_header(
@@ -154,7 +155,7 @@ let TripAdvisorClient = (() => {
      * @param {Object}  request
      * @param {Boolean} returnRequestBody
      *
-     * @return {Object}
+     * @return {Object|Promise}
      */
     let _doRequest = (request, returnRequestBody) => {
       if (returnRequestBody === true || getOptions().returnRequestBody === true) {
@@ -258,6 +259,38 @@ let TripAdvisorClient = (() => {
       return _doRequest(
         _request(
           'PUT',
+          url,
+          (params) ? params.query : undefined,
+          (params) ? params.body : undefined
+        ),
+        (params) ? params.returnRequestBody : undefined
+      );
+    };
+
+    /**
+     * Delete data to a url
+     *
+     * @param {String} url
+     * @param {Object} params
+     *
+     * @return {Promise}
+     */
+    this.delete = (url, params) => {
+      return _delete(url, params);
+    };
+
+    /**
+     * Delete data to a url
+     *
+     * @param {String} url
+     * @param {Object} params
+     *
+     * @return {Promise}
+     */
+    this._delete = (url, params) => {
+      return _doRequest(
+        _request(
+          'DELETE',
           url,
           (params) ? params.query : undefined,
           (params) ? params.body : undefined
