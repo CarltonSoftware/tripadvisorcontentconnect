@@ -5,6 +5,13 @@ const locutus = require('locutus');
 function Listing(accountId, listingId) {
   let account = accountId;
   let id = listingId;
+  let bookedRanges = [];
+  let defaultRate = {
+    nightlyRate: 0,
+    minimumStay: 3,
+    weeklyRate: 0
+  };
+  let seasonalRates = [];
 
   this.features = [];
   this.nearbyAmenities = [];
@@ -75,7 +82,7 @@ function Listing(accountId, listingId) {
    *
    * @return {String}
    */
-  this.getAccount = function() {
+  this.getAccount = () => {
     return account;
   };
 
@@ -86,7 +93,7 @@ function Listing(accountId, listingId) {
    *
    * @return {Listing}
    */
-  this.setAccount = function(a) {
+  this.setAccount = (a) => {
     account = a;
     return this;
   };
@@ -96,7 +103,7 @@ function Listing(accountId, listingId) {
    *
    * @return {String}
    */
-  this.id = function() {
+  this.id = () => {
     return id;
   };
 
@@ -110,6 +117,151 @@ function Listing(accountId, listingId) {
   this.setId = function(identifier) {
     id = identifier;
     return this;
+  };
+
+  let _validateChangeoverDay = (cd) => {
+    if (['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'FLEXIBLE'].indexOf(cd.toUpperCase()) < 0) {
+      throw new Errors.GeneralError('Specified changeover day is invalid.');
+    } else {
+      return true;
+    }
+  }
+
+  /**
+   * Set the default rate
+   *
+   * @param {Object} defaultRate
+   *
+   * @return {Listing}
+   */
+  this.setDefaultRate = (defaultRate) => {
+    var requiredFields = ['nightlyRate', 'minimumStay', 'weeklyRate'];
+    for (var i in requiredFields) {
+      if (defaultRate[requiredFields[i]]) {
+        _set('defaultRate', requiredFields[i], defaultRate[requiredFields[i]]);
+      } else {
+        throw new Errors.GeneralError(requiredFields[i] + ' missing from defaultRate');
+      }
+    }
+
+    var optionalFields = ['monthlyRate', 'weekendRate', 'additionalGuestFeeThreshold', 'additionalGuestFeeAmount'];
+    for (var i in optionalFields) {
+      if (defaultRate[optionalFields[i]]) {
+        _set('defaultRate', optionalFields[i], defaultRate[optionalFields[i]]);
+      }
+    }
+
+    if (typeof defaultRate.changeoverDay === 'string') {
+      if (_validateChangeoverDay(defaultRate.changeoverDay)) {
+        _set('defaultRate', 'changeoverDay', defaultRate.changeoverDay.toUpperCase());
+      }
+    }
+
+    return this;
+  };
+
+  /**
+   * Get the default rate
+   *
+   * @return {Object}
+   */
+  this.getDefaultRate = () => {
+    return defaultRate;
+  };
+
+  this.setSeasonalRates = (_seasonalRates) => {
+    seasonalRates = [];
+
+    for (var i in _seasonalRates) {
+      this.addSeasonalRate(_seasonalRates[i]);
+    }
+
+    return this;
+  };
+
+  /**
+   * Add a seasonal rate
+   *
+   * @param {Object} data - Containing keys :
+   *  - name
+   *  - startDate
+   *  - endDate
+   *  - nightlyRate
+   *  - weeklyRate
+   *  - monthlyRate
+   *  - minimumStay
+   *  - changeoverDay (optional but one of SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, FLEXIBLE)
+   *
+   * @return {Listing}
+   */
+  this.addSeasonalRate = (data) => {
+    var minimumStay = 7;
+    var required = ['name', 'startDate', 'endDate', 'minimumStay'];
+    var optional = ['additionalGuestFeeThreshold', 'additionalGuestFeeAmount'];
+    if (data.minimumStay) { 
+      minimumStay = data.minimumStay;
+    }
+
+    if (minimumStay < 7) {
+      required.push('nightlyRate');
+      optional.push('weeklyRate');
+      optional.push('monthlyRate');
+    } else if (minimumStay < 30) {
+      required.push('weeklyRate');
+      optional.push('nightlyRate');
+      optional.push('monthlyRate');
+    } else if (minimumStay > 30) {
+      required.push('monthlyRate');
+      optional.push('nightlyRate');
+      optional.push('weeklyRate');
+    }
+
+    var rate = {};
+    for (var i in required) {
+      if (data[required[i]]) {
+        rate[required[i]] = data[required[i]];
+        delete required[i];
+      }
+    }
+
+    required = required.filter((e) => {
+      return e !== undefined;
+    });
+
+    console.log(required);
+
+    for (var i in optional) {
+      if (data[optional[i]]) {
+        rate[optional[i]] = data[optional[i]];
+        delete optional[i];
+      }
+    }
+
+    optional = optional.filter((e) => {
+      return e !== undefined;
+    });
+
+    if (required.length > 0) {
+      throw new Errors.GeneralError('Some season rate keys are missing: ' + required.join(', '));
+    }
+
+    if (typeof data.changeoverDay === 'string') {
+      if (_validateChangeoverDay(data.changeoverDay)) {
+        rate.changeoverDay = data.changeoverDay.toUpperCase(); 
+      }
+    }
+
+    seasonalRates.push(rate);
+    return this;
+  };
+
+  /**
+   * Get the seasonal rates
+   *
+   * @return {Array}
+   */
+  this.getSeasonalRates = () => {
+    return seasonalRates;
   };
 
   /**
@@ -263,6 +415,7 @@ function Listing(accountId, listingId) {
 
 
   this.setBathrooms = (bathrooms) => {
+    details.bathrooms = [];
     for (var i in bathrooms) {
       this.addBathroom(bathrooms[i].bathroomType);
     }
@@ -271,18 +424,90 @@ function Listing(accountId, listingId) {
   };
 
   this.addBathroom = (type) => {
+    if (_validateBathroomType(type)) {
+      details.bathrooms.push({ bathroomType: type.toUpperCase() }); 
+    }
+    return this;
+  };
+
+  let _validateBathroomType = (type) => {
     if (['NONE', 'FAMILY', 'SHOWER', 'TOILET', 'ENSUITE'].indexOf(type.toUpperCase()) < 0) {
       throw new Errors.GeneralError('Invalid bathroom type');
     }
-    details.bathrooms.push({ bathroomType: type.toUpperCase() });
+
+    return true;
+  };
+
+  let _addBathroomType = (num, type) => {
+    for (var i = 0; i < num; i++) {
+      this.addBathroom(type);
+    }
+
     return this;
   };
 
-  this.clearBathrooms = () => {
-    details.bathrooms = [];
+  let clearBathroomType = (type) => {
+    if (_validateBathroomType(type)) {
+      for (var i in details.bathrooms) {
+        if (details.bathrooms.bathroomType === type.toUpperCase()) {
+          delete details.bathrooms[i];
+        }
+      }
+    }
+
     return this;
   };
 
+  this.setShowers = (num) => {
+    clearBathroomType('SHOWER');
+    return _addBathroomType(num, 'SHOWER');
+  };
+
+  this.setToilets = (num) => {
+    clearBathroomType('TOILET');
+    return _addBathroomType(num, 'TOILET');
+  };
+
+  this.setFamilyBathrooms = (num) => {
+    clearBathroomType('FAMILY');
+    return _addBathroomType(num, 'FAMILY');
+  };
+
+  this.getBathrooms = () => {
+    return details.bathrooms;
+  };
+
+
+
+  this.getBookedRanges = () => {
+    return bookedRanges;
+  };
+
+  this.setBookedRanges = (cal) => {
+    bookedRanges = [];
+    for (var i in cal) {
+      this.addBookedRange(cal[i].start, cal[i].end, cal[i].label);
+    }
+    return this;
+  };
+
+  this.addBookedRange = (start, end, label) => {
+    bookedRanges.push({ start: start, end: end, label: label || '' });
+    return this;
+  };
+
+  this.updateBookedRanges = () => {
+    return new Promise((resolve,reject) => {
+      this._update(
+        this.getPath(undefined, 'availability'),
+        { bookedRanges: this.getBookedRanges() }
+      ).then((response) => {
+        resolve(response.toJSON().body);
+      }).catch((err) => {
+        reject(err);
+      });
+    });
+  };
 
 
 
@@ -293,8 +518,6 @@ function Listing(accountId, listingId) {
   this.setDescription = (desc) => {
     return _set('descriptions', 'rentalDescription', desc);
   };
-
-
 
   this.setAddress = (address) => {
     return _set('address', 'address', address);
@@ -342,6 +565,29 @@ function Listing(accountId, listingId) {
   };
 
   /**
+   * Set a new photo set
+   * 
+   * @param {Array} photosArr
+   *
+   * @return {Object}
+   */
+  this.setPhotos = (photosArr) => {
+    photos = [];
+    for (var i in photosArr) {
+      if (typeof photosArr[i] === 'string') {
+        this.addPhoto(photosArr[i]);
+      } else {
+        this.addPhoto(
+          photosArr[i].url,
+          photosArr[i].caption,
+          photosArr[i].externalPhotoReference
+        );
+      }
+    }
+    return this;
+  };
+
+  /**
    * @return {Object}
    */
   this.getBookingPolicies = () => {
@@ -383,17 +629,24 @@ function Listing(accountId, listingId) {
 
 
   let _toggleActivate = (toggleBool) => {
-    if (toggleBool === true && this.isActive()) {
-      reject(new Errors.AlreadyActive());
-    }
+    return new Promise((resolve, reject) => {
+      if (toggleBool === true && this.isActive()) {
+        reject(new Errors.AlreadyActive());
+      }
 
-    if (toggleBool === false && !this.isActive()) {
-      reject(new Errors.AlreadyDeActive());
-    }
+      if (toggleBool === false && !this.isActive()) {
+        reject(new Errors.AlreadyDeActive());
+      }
 
-    return this._update(
-      this.getPath(undefined, (toggleBool) ? 'activation' : 'deactivation')
-    );
+      this._update(
+        this.getPath(undefined, (toggleBool) ? 'activation' : 'deactivation')
+      ).then((response) => {
+        this.active = toggleBool;
+        resolve(response);
+      }).catch((error) => {
+        reject(error);
+      });
+    });
   };
 
   /**
@@ -424,7 +677,11 @@ Listing.prototype.constructor = Listing;
 Listing.prototype.toArray = function() {
   return {
     details: this.getDetails(),
-    descriptions: this.getDescriptions(),
+    textLanguage: 'en_US',
+    descriptions: {
+      listingTitle: this.getDescriptions().listingTitle,
+      rentalDescription: this.getDescriptions().rentalDescription
+    },
     address: this.getAddress(),
     features: this.features,
     nearbyAmenities: this.nearbyAmenities,
@@ -432,8 +689,13 @@ Listing.prototype.toArray = function() {
     currency: 'GBP',
     active: this.active || false,
     photos: this.getPhotos(),
-    textLanguage: 'en_US',
-    bookingPolicies: this.getBookingPolicies()
+    bookingPolicies: this.getBookingPolicies(),
+    rates: {
+      defaultRate: this.getDefaultRate(),
+      seasonalRates: this.getSeasonalRates(),
+      damageDeposit: 0,
+      taxPercentage: 0
+    }
   };
 };
 Listing.prototype.mutateResponse = function(json) {
@@ -469,6 +731,25 @@ Listing.prototype.mutateResponse = function(json) {
     }
 
     delete json.photos;
+  }
+
+  if (typeof json.rates === 'object' 
+    && json.rates !== null
+  ) {
+    this.setDefaultRate(json.rates.defaultRate);
+
+    if (json.rates.seasonalRates) {
+      this.setSeasonalRates(json.rates.seasonalRates);
+    }
+  } else if (json.rates === null) {
+    delete json.rates;
+  }
+
+  if (json.calendar 
+    && json.calendar.bookedRanges 
+    && Array.isArray(json.calendar.bookedRanges)
+  ) {
+    this.setBookedRanges(json.calendar.bookedRanges);
   }
 
   return this.mutateEntity(json);
