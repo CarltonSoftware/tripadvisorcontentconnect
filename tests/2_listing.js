@@ -31,7 +31,10 @@ describe('Test new Listing', function() {
   // Set data
   l.setMaxOccupancy(4)
     .setBedroomsByNumber(2, 1)
-    .addPhoto('http://via.placeholder.com/400x400')
+    .addPhoto('http://via.placeholder.com/100x400')
+    .addPhoto('http://via.placeholder.com/200x400')
+    .addPhoto('http://via.placeholder.com/300x400')
+    .addPhoto('http://via.placeholder.com/400x400', 'Caption')
     .setAddress('Bank House, Market Place, Reepham, GB')
     .setPostalCode('NR10 4JJ')
     .setLongitude(1.2345)
@@ -41,7 +44,10 @@ describe('Test new Listing', function() {
     { accessor: 'details.propertyType', value: 'COTTAGE' },
     { accessor: 'details.maxOccupancy', value: 4 },
     { accessor: 'details.bedrooms', value: [{ beds: [ 'DOUBLE_BED' ]}, { beds: [ 'DOUBLE_BED' ]}, { beds: [ 'SINGLE_BED' ]}] },
-    { accessor: 'photos', value: [ { externalPhotoReference: 'http://via.placeholder.com/400x400', url: 'http://via.placeholder.com/400x400', caption: '' } ] },
+    { accessor: 'photos[0]', value: { externalPhotoReference: 'http://via.placeholder.com/100x400', url: 'http://via.placeholder.com/100x400', caption: '' } },
+    { accessor: 'photos[1]', value: { externalPhotoReference: 'http://via.placeholder.com/200x400', url: 'http://via.placeholder.com/200x400', caption: '' } },
+    { accessor: 'photos[2]', value: { externalPhotoReference: 'http://via.placeholder.com/300x400', url: 'http://via.placeholder.com/300x400', caption: '' } },
+    { accessor: 'photos[3]', value: { externalPhotoReference: 'http://via.placeholder.com/400x400', url: 'http://via.placeholder.com/400x400', caption: 'Caption' } },
     { accessor: 'address.address', value: 'Bank House, Market Place, Reepham, GB' },
     { accessor: 'address.postalCode',value: 'NR10 4JJ' },
     { accessor: 'address.longitude', value: 1.2345 },

@@ -320,7 +320,7 @@ function Listing(accountId, listingId) {
     return this.active === true;
   };
 
-  this.addPhoto = (url, externalPhotoReference, caption) => {
+  this.addPhoto = (url, caption, externalPhotoReference) => {
     if (typeof url !== 'string' || url.length === 0) {
       throw new Errors.GeneralError('Invalid photo url supplied.');
     }
@@ -463,8 +463,8 @@ Listing.prototype.mutateResponse = function(json) {
     for (var p in json.photos) {
       this.addPhoto(
         json.photos[p].url,
-        json.photos[p].externalPhotoReference,
-        json.photos[p].caption
+        json.photos[p].caption,
+        json.photos[p].externalPhotoReference
       );
     }
 
