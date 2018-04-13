@@ -1,6 +1,6 @@
 var assert = require('chai').assert;
-var tr = require('../TripAdvisorClient').getInstance();
-var Listing = require('../Listing');
+var tr = require('../src/TripAdvisorClient').getInstance();
+var Listing = require('../src/Listing');
 var given = require('mocha-testdata').given;
 
 describe('Test Listing Errors', function() {

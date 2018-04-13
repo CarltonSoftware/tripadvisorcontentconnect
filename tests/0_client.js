@@ -7,7 +7,7 @@ if (process.env && process.env.NODE_ENV) {
 }
 
 
-var client = require('../TripAdvisorClient.js');
+var client = require('../src/TripAdvisorClient');
 var options = { client_id: 'ABC', secret: 'XYZ' };
 var tr = client.connect(options);
 

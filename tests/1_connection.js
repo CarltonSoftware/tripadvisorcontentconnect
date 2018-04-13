@@ -1,4 +1,4 @@
-var client = require('../TripAdvisorClient.js');
+var client = require('../src/TripAdvisorClient');
 var options = { 
   base_url: process.env.ta_base_url,
   client_id: process.env.ta_client_id,

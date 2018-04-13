@@ -2,7 +2,7 @@
   "name": "tripadvisorcontentconnect",
   "version": "0.0.1",
   "description": "This is a Rest/Promise wrapper for the tripadvisor content connect api.",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "cross-env NODE_ENV=test mocha -R spec tests/*.js",
     "sandbox": "cross-env NODE_ENV=test node sandbox.js"
