@@ -228,8 +228,6 @@ function Listing(accountId, listingId) {
       return e !== undefined;
     });
 
-    console.log(required);
-
     for (var i in optional) {
       if (data[optional[i]]) {
         rate[optional[i]] = data[optional[i]];
