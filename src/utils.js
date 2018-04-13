@@ -4,8 +4,14 @@ const TripAdvisorClient = require('./TripAdvisorClient');
 
 module.exports = {
   getAllListings: (account) => {
-    let c = new Collection(account, Listing);
-    return c.fetch();
+    return new Promise((resolve, reject) => {
+      let c = new Collection(account, Listing);
+      c.fetch().then((json) => {
+        resolve(json)
+      }).catch((err) => {
+        reject(err);
+      });
+    });
   },
   getAllFullListings: (account) => {
     return module.exports.getAllListings(account).then((Col) => {

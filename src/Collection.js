@@ -1,4 +1,4 @@
-const TripAdvisorClient = require('./TripAdvisorClient.js').getInstance();
+const TripAdvisorClient = require('./TripAdvisorClient').getInstance();
 const Errors = require('./Errors');
 
 function Collection(path, entity) {
@@ -24,8 +24,14 @@ Collection.prototype.fetch = function() {
       });
 
       resolve(t);
-    }, (response) => {
-      reject(new Errors.StatusError(response));
+    }).catch((err) => {
+      if (err.statusCode === 404) {
+        reject(new Errors.GeneralError('Collection ' + t.path + ' not found'));
+      } else if (err.statusCode === 400) {
+        reject(new Errors.StatusError(err));
+      } else {
+        reject(err);
+      }
     });
   });
 };
@@ -92,6 +98,15 @@ Collection.prototype.shift = function() {
 */
 Collection.prototype.count = function() {
   return this.entities.length;
+};
+
+/**
+* Index
+*
+* @returns {Entity}
+*/
+Collection.prototype.index = function(index) {
+  return this.entities[index];
 };
 
 module.exports = Collection;

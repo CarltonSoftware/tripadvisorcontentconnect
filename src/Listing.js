@@ -143,33 +143,44 @@ function Listing(accountId, listingId) {
   /**
    * Set the default rate
    *
-   * @param {Object} defaultRate
+   * @param {Object} rate
    *
    * @return {Listing}
    */
-  this.setDefaultRate = (defaultRate) => {
-    if (!typeof defaultRate === 'object' || !defaultRate) {
+  this.setDefaultRate = (rate) => {
+    if (!typeof rate === 'object' || !rate) {
       return this;
     }
-    var requiredFields = ['nightlyRate', 'minimumStay', 'weeklyRate'];
+    var requiredFields = ['minimumStay'];
+    var optionalFields = ['monthlyRate', 'weekendRate', 'additionalGuestFeeThreshold', 'additionalGuestFeeAmount'];
+
+    if (typeof rate.nightlyRate === 'undefined') {
+      requiredFields.push('weeklyRate');
+    } else {
+      requiredFields.push('nightlyRate');
+    }
+    if (typeof rate.weeklyRate === 'undefined') {
+      requiredFields.push('nightlyRate');
+    } else {
+      requiredFields.push('weeklyRate');
+    }
     for (var i in requiredFields) {
-      if (defaultRate[requiredFields[i]]) {
-        _set('defaultRate', requiredFields[i], defaultRate[requiredFields[i]]);
+      if (typeof rate[requiredFields[i]] !== 'undefined') {
+        _set('defaultRate', requiredFields[i], rate[requiredFields[i]]);
       } else {
         throw new Errors.GeneralError(requiredFields[i] + ' missing from defaultRate');
       }
     }
 
-    var optionalFields = ['monthlyRate', 'weekendRate', 'additionalGuestFeeThreshold', 'additionalGuestFeeAmount'];
     for (var i in optionalFields) {
-      if (defaultRate[optionalFields[i]]) {
-        _set('defaultRate', optionalFields[i], defaultRate[optionalFields[i]]);
+      if (rate[optionalFields[i]]) {
+        _set('defaultRate', optionalFields[i], rate[optionalFields[i]]);
       }
     }
 
-    if (typeof defaultRate.changeoverDay === 'string') {
-      if (_validateChangeoverDay(defaultRate.changeoverDay)) {
-        _set('defaultRate', 'changeoverDay', defaultRate.changeoverDay.toUpperCase());
+    if (typeof rate.changeoverDay === 'string') {
+      if (_validateChangeoverDay(rate.changeoverDay)) {
+        _set('defaultRate', 'changeoverDay', rate.changeoverDay.toUpperCase());
       }
     }
 
