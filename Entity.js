@@ -1,12 +1,39 @@
-const TripAdvisorClient = require('./TripAdvisorClient.js').getInstance();
-const Errors = require('./Errors.js');
+const TripAdvisorClient = require('./TripAdvisorClient').getInstance();
+const Errors = require('./Errors');
 
 /**
  * Base object
  *
  * @returns {Entity}
  */
-function Entity() {};
+function Entity() {
+  /**
+   * @returns {String}
+   */
+  this.path = function() {
+    return '';
+  };
+
+  /**
+   * @returns {String}
+   */
+  this.id = function() {
+    return '';
+  };
+};
+
+let _checkId = (id) => {
+  if ((['string', 'number'].indexOf(typeof id) < 0) 
+    || (typeof id === 'string' && id.length === 0)
+  ) {
+    throw new Errors.IdNotSpecified();
+  }
+};
+let _checkPath = (path) => {
+  if (typeof path !== 'string' || path.length === 0) {
+    throw new Errors.PathNotSpecified();
+  }
+};
 
 /**
  * Function used to map json values onto a single object. 
@@ -70,7 +97,23 @@ Entity.prototype._get = function(path, params) {
  * @returns {Promise}
  */
 Entity.prototype._update = function(path, params) {
-  return TripAdvisorClient.put(path, { body: params });
+  return new Promise((resolve, reject) => {
+    TripAdvisorClient.put(path, { body: params }).then((response) => {
+      resolve(response);
+    }, (err) => {
+      if (err.statusCode === 400) {
+        if (typeof err.error === 'string' && err.error.length > 0) {
+          let body = JSON.parse(err.error);
+          if (Array.isArray(body)) {
+            reject(new Errors.DomainErrors(err));
+          } else {
+            reject(new Errors.BadRequestError(err));
+          }
+        }
+      }
+      reject(new Errors.StatusError(err));
+    });
+  });
 };
 
 /**
@@ -95,11 +138,12 @@ Entity.prototype.getPath = function(prefix, suffix) {
   if (typeof this.parent === 'object') {
     prefix = this.parent.getPath(prefix);
   }
-
+  _checkPath(this.path());
+  _checkId(this.id());
   return [
     (typeof prefix === 'string') ? prefix : undefined,
-    this.path,
-    this.id,
+    this.path(),
+    this.id(),
     (typeof suffix === 'string') ? suffix : undefined
   ].filter((i) => {
     return typeof i !== 'undefined'
@@ -109,7 +153,7 @@ Entity.prototype.getPath = function(prefix, suffix) {
 /**
  * Return the post representation
  *
- * @returns {Entity.prototype.toArray.EntityAnonym$0}
+ * @returns {Object}
  */
 Entity.prototype.toArray = function() {
   return {};
@@ -121,10 +165,6 @@ Entity.prototype.toArray = function() {
  * @returns {Promise}
  */
 Entity.prototype.get = function() {
-  if (typeof this.path === 'undefined') {
-    throw new Errors.PathNotSpecified();
-  }
-
   return this._get(this.getPath());
 };
 
@@ -134,14 +174,6 @@ Entity.prototype.get = function() {
  * @returns {Promise}
  */
 Entity.prototype.update = function() {
-  if (typeof this.id === 'undefined') {
-    throw new Errors.IdNotSpecified();
-  }
-
-  if (typeof this.path === 'undefined') {
-    throw new Errors.PathNotSpecified();
-  }
-
   return this._update(this.getPath(), this.toArray());
 };
 
@@ -150,7 +182,7 @@ Entity.prototype.update = function() {
  *
  * @returns {Promise}
  */
-Entity.prototype.create = function() {
+Entity.prototype.create = () => {
   return this.update();
 };
 

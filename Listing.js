@@ -2,9 +2,10 @@ const Entity = require('./Entity');
 const Errors = require('./Errors');
 const locutus = require('locutus');
 
-function Listing(account, id) {
-  this.path = account;
-  this.id = id;
+function Listing(accountId, listingId) {
+  let account = accountId;
+  let id = listingId;
+
   this.features = [];
   this.nearbyAmenities = [];
   this.guestRequirements = [];
@@ -52,7 +53,7 @@ function Listing(account, id) {
     }
   };
 
-  this._set = (variable, key, value) => {
+  let _set = (variable, key, value) => {
     if (typeof value === 'string') {
       value = '"' + value + '"';
     }
@@ -65,33 +66,92 @@ function Listing(account, id) {
     if (typeof this['set' + locutus.php.strings.ucfirst(key)] === 'function') {
       return this['set' + locutus.php.strings.ucfirst(key)](value);
     } else {
-      return this._set(variable, key, value);
+      return _set(variable, key, value);
     }
   };
 
-  this.setBathrooms = (bathrooms) => {
-    for (var i in bathrooms) {
-      this.addBathroom(bathrooms[i].bathroomType);
-    }
+  /**
+   * Return the account id
+   *
+   * @return {String}
+   */
+  this.getAccount = function() {
+    return account;
+  };
 
+  /**
+   * Set the account
+   *
+   * @param {String} a
+   *
+   * @return {Listing}
+   */
+  this.setAccount = function(a) {
+    account = a;
     return this;
   };
 
+  /**
+   * Return the listing id
+   *
+   * @return {String}
+   */
+  this.id = function() {
+    return id;
+  };
+
+  /**
+   * Set the id
+   *
+   * @param {String} identifier
+   *
+   * @return {Listing}
+   */
+  this.setId = function(identifier) {
+    id = identifier;
+    return this;
+  };
+
+  /**
+   * Get bedrooms array
+   *
+   * @return {Array}
+   */
+  this.getBedrooms = () => {
+    return details.bedrooms;
+  };
+
+  let _addBedroom = (beds) => {
+    for (var i in beds) {
+      this.validateBedType(beds[i]);
+    }
+    details.bedrooms.push({ beds: beds });
+  };
+
+  /**
+   * Set bedrooms with an array
+   * This will mainly be called by get();
+   *
+   * @param {Array} bedrooms
+   *
+   * @return {Listing}
+   */
   this.setBedrooms = (bedrooms) => {
     for (var i in bedrooms) {
-      this.addBedroom(bedrooms[i]);
+      _addBedroom(bedrooms[i].beds);
     }
 
     return this;
   };
 
-  this.addBedroom = (bedroom) => {
-    if (this.validateBedType(bedroom)) {
-      details.bedrooms.push(bedroom);
-    }
-    return this;
-  };
-
+  /**
+   * Set beds outside rooms with an array
+   * This will mainly be called by get();
+   *
+   * @param {Array} bedrooms
+   *
+   * @return {Listing}
+   */
   this.setBedsOutsideBedrooms = (bedrooms) => {
     for (var i in bedrooms) {
       this.addBedOutsideBedroom(bedrooms[i]);
@@ -100,6 +160,13 @@ function Listing(account, id) {
     return this;
   };
 
+  /**
+   * Add a bed outside of rooms
+   *
+   * @param {String} bedroom type
+   *
+   * @return {Listing}
+   */
   this.addBedOutsideBedroom = (bedroom) => {
     if (this.validateBedType(bedroom)) {
       details.bedsOutsideBedrooms.push(bedroom);
@@ -107,38 +174,100 @@ function Listing(account, id) {
     return this;
   };
 
+  /**
+   * Validate the bedtype
+   *
+   * @param {String} bedroom
+   *
+   * @return {Listing}
+   */
   this.validateBedType = (bedroom) => {
-    return ['SUPER_KING_BED', 'KING_BED', 'DOUBLE_BED', 'SOFA_BED', 'BUNK_BED', 'SINGLE_BED', 'COT_BED'].indexOf(bedroom) >= 0;
+    if (['SUPER_KING_BED', 'KING_BED', 'DOUBLE_BED', 'SOFA_BED', 'BUNK_BED', 'SINGLE_BED', 'COT_BED'].indexOf(bedroom) >= 0) {
+      return true;
+    } else {
+      throw new Errors.GeneralError('Invalid bedtype ' + bedroom)
+    }
   };
 
-  this.setMaxOccupancy = (o) => {
-    return this._set('details', 'maxOccupancy', o);
+  /**
+   * Set the bedrooms by the number
+   * 
+   * @param {Number} doubles
+   * @param {Number} singles
+   *
+   * @return {Listing}
+   */
+  this.setBedroomsByNumber = (doubles, singles) => {
+    details.bedrooms = [];
+
+    if (typeof doubles !== 'number') {
+      doubles = 0;
+    }
+    if (typeof singles !== 'number') {
+      singles = 0;
+    }
+
+    var bed = [];
+    var pointer = 0;
+    for (var i = 0; i < doubles; i++) {
+      _addBedroom(['DOUBLE_BED']);
+      pointer++;
+    }
+    for (var j = 0; j < singles; j++) {
+      _addBedroom(['SINGLE_BED']);
+      pointer++;
+    }
+
+    return this;
   };
 
-  this._setCheckTime = (key, hour) => {
+  /**
+   * Max occupancy checker
+   *
+   * @param {Number} occupancy
+   *
+   * @return {Listing}
+   */
+  this.setMaxOccupancy = (occupancy) => {
+    return _set('details', 'maxOccupancy', occupancy);
+  };
+
+
+
+  let _setCheckTime = (key, hour) => {
     let times = [
       'ZERO', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN', 
       'ELEVEN', 'TWELVE', 'THIRTEEN', 'FOURTEEN', 'FIFTEEN', 'SIXTEEN', 'SEVENTEEN', 'EIGHTEEN', 'NINETEEN', 'TWENTY', 
       'TWENTY_ONE', 'TWENTY_TWO', 'TWENTY_THREE', 'ZERO'
     ];
 
-    return this._set('details', key, times[hour] ? times[hour] : 'FLEXIBLE');
+    return _set('details', key, times[hour] ? times[hour] : 'FLEXIBLE');
   };
 
   this.setCheckInTime = (hour) => {
-    return this._setCheckTime('checkInTime', hour);
+    return _setCheckTime('checkInTime', hour);
   };
 
   this.setCheckOutTime = (hour) => {
-    return this._setCheckTime('checkOutTime', hour);
+    return _setCheckTime('checkOutTime', hour);
   };
 
   this.setCarRequired = (bool) => {
-    return this._set('details', 'carRequired', (bool === true) ? 'REQUIRED' : 'NOT_REQUIRED');
+    return _set('details', 'carRequired', (bool === true) ? 'REQUIRED' : 'NOT_REQUIRED');
   };
 
   this.setCarRecommended = () => {
-    return this._set('details', 'carRequired', 'RECOMMENDED');
+    return _set('details', 'carRequired', 'RECOMMENDED');
+  };
+
+
+
+  this.setBathrooms = (bathrooms) => {
+    for (var i in bathrooms) {
+      this.addBathroom(bathrooms[i].bathroomType);
+    }
+
+    return this;
   };
 
   this.addBathroom = (type) => {
@@ -149,67 +278,38 @@ function Listing(account, id) {
     return this;
   };
 
-  this.addBedroomByNumber = (doubles, singles) => {
-    if (typeof doubles !== 'number') {
-      doubles = 0;
-    }
-    if (typeof singles !== 'number') {
-      singles = 0;
-    }
-
-    var bed = [];
-    for (var i = 0; i < doubles; i++) {
-      bed.push('DOUBLE_BED');
-    }
-    for (var i = 0; i < singles; i++) {
-      bed.push('SINGLE_BED');
-    }
-
-    details.bedrooms.push(bed);
-
-    return this;
-  };
-
-  this.clearBedrooms = () => {
-    details.bedrooms = [];
-    return this;
-  };
-
   this.clearBathrooms = () => {
     details.bathrooms = [];
     return this;
   };
 
+
+
+
   this.setTitle = (title) => {
-    return this._setDescription('listingTitle', title);
+    return _set('descriptions', 'listingTitle', title);
   };
 
   this.setDescription = (desc) => {
-    return this._setDescription('rentalDescription', desc);
+    return _set('descriptions', 'rentalDescription', desc);
   };
 
-  this._setDescription = (key, desc) => {
-    return this._set('descriptions', key, desc);
-  };
+
 
   this.setAddress = (address) => {
-    return this._setAddress('address', address);
+    return _set('address', 'address', address);
   };
 
   this.setPostalCode = (postalCode) => {
-    return this._setAddress('postalCode', postalCode);
+    return _set('address', 'postalCode', postalCode);
   };
 
   this.setLatitude = (latitude) => {
-    return this._setAddress('latitude', latitude);
+    return _set('address', 'latitude', latitude);
   };
 
   this.setLongitude = (longitude) => {
-    return this._setAddress('longitude', longitude);
-  };
-
-  this._setAddress = (key, value) => {
-    return this._set('address', key, value);
+    return _set('address', 'longitude', longitude);
   };
 
   this.isTemporary = () => {
@@ -221,11 +321,17 @@ function Listing(account, id) {
   };
 
   this.addPhoto = (url, externalPhotoReference, caption) => {
+    if (typeof url !== 'string' || url.length === 0) {
+      throw new Errors.GeneralError('Invalid photo url supplied.');
+    }
+
     photos.push({
-      externalPhotoReference: externalPhotoReference,
+      externalPhotoReference: externalPhotoReference || url.substring(0, 512),
       url: url,
-      caption: caption
+      caption: caption || ''
     });
+
+    return this;
   };
 
   /**
@@ -276,49 +382,45 @@ function Listing(account, id) {
 
 
 
+  let _toggleActivate = (toggleBool) => {
+    if (toggleBool === true && this.isActive()) {
+      reject(new Errors.AlreadyActive());
+    }
 
+    if (toggleBool === false && !this.isActive()) {
+      reject(new Errors.AlreadyDeActive());
+    }
+
+    return this._update(
+      this.getPath(undefined, (toggleBool) ? 'activation' : 'deactivation')
+    );
+  };
+
+  /**
+   * Activate the listing
+   * 
+   * @return {Promise}
+   */
   this.activate = () => {
-    return this._toggleActivate(true);
+    return _toggleActivate(true);
   };
 
+  /**
+   * Deactivate the listing
+   * 
+   * @return {Promise}
+   */
   this.deactivate = () => {
-    return this._toggleActivate(false);
+    return _toggleActivate(false);
   };
 
-  this._toggleActivate = (toggleBool) => {
-    return new Promise((resolve, reject) => {
-      if (toggleBool === true && this.isActive()) {
-        reject(new Errors.AlreadyActive());
-      }
-
-      if (toggleBool === false && !this.isActive()) {
-        reject(new Errors.AlreadyDeActive());
-      }
-
-      if (toggleBool) {
-        return this._update(
-          this.getPath(undefined, 'activation')
-        ).then(() => {
-          this.active = toggleBool;
-          resolve(this);
-        }, (response) => {
-          reject(new Errors.DomainErrors(response));
-        });
-      } else {
-        return this._delete(
-          this.getPath(undefined, 'deactivation')
-        ).then(() => {
-          this.active = toggleBool;
-          resolve(this);
-        }, (response) => {
-          reject(new Errors.DomainErrors(response));
-        });
-      }
-    });
-  }
+  this.path = function() {
+    return this.getAccount();
+  };
 }
 
 Listing.prototype = new Entity();
+Listing.prototype.constructor = Listing;
 Listing.prototype.toArray = function() {
   return {
     details: this.getDetails(),
