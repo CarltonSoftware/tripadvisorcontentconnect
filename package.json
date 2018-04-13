@@ -1,5 +1,5 @@
 {
-  "name": "tripadvisor_cc_apiclient",
+  "name": "tripadvisorcontentconnect",
   "version": "0.0.1",
   "description": "This is a Rest/Promise wrapper for the tripadvisor content connect api.",
   "main": "index.js",
