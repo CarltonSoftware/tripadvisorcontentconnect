@@ -12,6 +12,7 @@ function Listing(accountId, listingId) {
     weeklyRate: 0
   };
   let seasonalRates = [];
+  let weekendType = 'FRIDAY_SATURDAY_SUNDAY';
 
   this.features = [];
   this.nearbyAmenities = [];
@@ -77,6 +78,18 @@ function Listing(accountId, listingId) {
     }
   };
 
+  this.setWeekendType = (type) => {
+    if (typeof type !== 'string' || ['NONE', 'FRIDAY_SATURDAY', 'SATURDAY_SUNDAY', 'FRIDAY_SATURDAY_SUNDAY'].indexOf(type.toUpperCase()) < 0) {
+      throw new Errors.GeneralError('Weekend Type invalid');
+    }
+    weekendType = type.toUpperCase();
+    return this;
+  };
+
+  this.getWeekendType = () => {
+    return weekendType;
+  };
+
   /**
    * Return the account id
    *
@@ -135,6 +148,9 @@ function Listing(accountId, listingId) {
    * @return {Listing}
    */
   this.setDefaultRate = (defaultRate) => {
+    if (!typeof defaultRate === 'object' || !defaultRate) {
+      return this;
+    }
     var requiredFields = ['nightlyRate', 'minimumStay', 'weeklyRate'];
     for (var i in requiredFields) {
       if (defaultRate[requiredFields[i]]) {
@@ -204,7 +220,7 @@ function Listing(accountId, listingId) {
 
     if (minimumStay < 7) {
       required.push('nightlyRate');
-      optional.push('weeklyRate');
+      required.push('weeklyRate');
       optional.push('monthlyRate');
     } else if (minimumStay < 30) {
       required.push('weeklyRate');
@@ -218,7 +234,7 @@ function Listing(accountId, listingId) {
 
     var rate = {};
     for (var i in required) {
-      if (data[required[i]]) {
+      if (typeof data[required[i]] !== 'undefined') {
         rate[required[i]] = data[required[i]];
         delete required[i];
       }
@@ -228,19 +244,14 @@ function Listing(accountId, listingId) {
       return e !== undefined;
     });
 
-    for (var i in optional) {
-      if (data[optional[i]]) {
-        rate[optional[i]] = data[optional[i]];
-        delete optional[i];
-      }
-    }
-
-    optional = optional.filter((e) => {
-      return e !== undefined;
-    });
-
     if (required.length > 0) {
       throw new Errors.GeneralError('Some season rate keys are missing: ' + required.join(', '));
+    }
+
+    for (var i in optional) {
+      if (typeof data[optional[i]] !== 'undefined') {
+        rate[optional[i]] = data[optional[i]];
+      }
     }
 
     if (typeof data.changeoverDay === 'string') {
@@ -692,16 +703,17 @@ Listing.prototype.toArray = function() {
       defaultRate: this.getDefaultRate(),
       seasonalRates: this.getSeasonalRates(),
       damageDeposit: 0,
-      taxPercentage: 0
+      taxPercentage: 0,
+      weekendType: this.getWeekendType()
     }
   };
 };
 Listing.prototype.mutateResponse = function(json) {
-  if (!this.path) {
-    this.path = json.externalAccountReference; 
+  if (typeof json.externalAccountReference === 'string') {
+    this.setAccount(json.externalAccountReference);
   }
-  if (!this.id) {
-    this.id = json.externalListingReference; 
+  if (typeof json.externalListingReference === 'string') {
+    this.setId(json.externalListingReference);
   }
 
   var objects = ['details', 'address', 'descriptions', 'bookingPolicies'];
@@ -739,6 +751,7 @@ Listing.prototype.mutateResponse = function(json) {
     if (json.rates.seasonalRates) {
       this.setSeasonalRates(json.rates.seasonalRates);
     }
+    delete json.rates;
   } else if (json.rates === null) {
     delete json.rates;
   }

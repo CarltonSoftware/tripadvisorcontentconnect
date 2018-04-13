@@ -1,5 +1,6 @@
 .env
 .env.test
+.env.prod
 sandbox.js
 
 node_modules
