@@ -1,5 +1,5 @@
 module.exports = {
-  Utils: require('./utils'),
+  Utils: require('./Utils'),
   Client: require('./TripAdvisorClient'),
   Listing: require('./Listing')
 }

@@ -556,7 +556,7 @@ function Listing(accountId, listingId) {
   };
 
   this.isTemporary = () => {
-    return this.id && this.id.substring(0, 27) === 'TripAdvisorListingReference'
+    return this.id() && this.id().substring(0, 27) === 'TripAdvisorListingReference'
   };
 
   this.isActive = () => {
@@ -689,6 +689,26 @@ function Listing(accountId, listingId) {
 
   this.path = function() {
     return this.getAccount();
+  };
+
+  /**
+   * Update a listings reference
+   *
+   * @param {String} reference
+   *
+   * @return {Promise}
+   */
+  this.updateReference = (reference) => {
+    return new Promise((resolve, reject) => {
+      this._update(
+        this.getPath(undefined, reference)
+      ).then((response) => {
+        this.setId(reference);
+        resolve(response);
+      }).catch((error) => {
+        reject(error);
+      });
+    });
   };
 }
 
