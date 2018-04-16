@@ -63,7 +63,7 @@ function Listing(accountId, listingId) {
 
   let _set = (variable, key, value) => {
     if (typeof value === 'string') {
-      value = '"' + value + '"';
+      value = '"' + value.split('\n').join('\\n') + '"';
     }
 
     eval(variable + '["' + key + '"] = ' + value + ';');
