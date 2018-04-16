@@ -1,6 +1,6 @@
-const Entity = require('./Entity');
-const Errors = require('./Errors');
-const locutus = require('locutus');
+var Entity = require('./Entity');
+var Errors = require('./Errors');
+var locutus = require('locutus');
 
 function Listing(accountId, listingId) {
   let account = accountId;

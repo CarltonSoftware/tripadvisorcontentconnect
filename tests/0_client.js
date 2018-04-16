@@ -1,4 +1,4 @@
-const dotenv = require('dotenv');
+var dotenv = require('dotenv');
 
 if (process.env && process.env.NODE_ENV) {
   dotenv.config({ path: '.env.' + process.env.NODE_ENV });

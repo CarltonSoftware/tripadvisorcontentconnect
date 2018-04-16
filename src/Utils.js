@@ -1,7 +1,7 @@
-const Listing = require('./Listing');
-const Collection = require('./Collection');
-const TripAdvisorClient = require('./TripAdvisorClient');
-const Errors = require('./Errors');
+var Listing = require('./Listing');
+var Collection = require('./Collection');
+var TripAdvisorClient = require('./TripAdvisorClient');
+var Errors = require('./Errors');
 
 module.exports = {
   getAllListings: (account) => {

@@ -1,5 +1,5 @@
-const TripAdvisorClient = require('./TripAdvisorClient').getInstance();
-const Errors = require('./Errors');
+var TripAdvisorClient = require('./TripAdvisorClient').getInstance();
+var Errors = require('./Errors');
 
 function Collection(path, entity) {
   this.path = path;
