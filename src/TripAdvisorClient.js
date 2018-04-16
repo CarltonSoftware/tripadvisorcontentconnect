@@ -75,7 +75,7 @@ let TripAdvisorClient = (() => {
           _path(url),
           params,
           ts,
-          CryptoJS.SHA512(body)
+          CryptoJS.SHA512(body).toString()
         ].join("\n")
       ).toString().toLowerCase();
 
