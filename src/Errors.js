@@ -44,13 +44,18 @@ function StatusError(response) {
     if (typeof response.error === 'string') {
       response.error = JSON.parse(response.error);
     }
-    for (var i in response.error) {
-      let error = {};
-      for (var j in response.error[i]) {
-        error[j] = response.error[i][j];
-      }
 
-      errors.push(error);
+    if (Array.isArray(response.error)) {
+      for (var i in response.error) {
+        let error = {};
+        for (var j in response.error[i]) {
+          error[j] = response.error[i][j];
+        }
+
+        errors.push(error);
+      }
+    } else {
+      errors.push(response.error);
     }
   }
 
