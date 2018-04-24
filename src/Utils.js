@@ -2,8 +2,23 @@ var Listing = require('./Listing');
 var Collection = require('./Collection');
 var TripAdvisorClient = require('./TripAdvisorClient');
 var Errors = require('./Errors');
+var sleep = require('system-sleep');
 
 module.exports = {
+  connect: () => {
+    const dotenv = require('dotenv');
+    if (process.env && process.env.NODE_ENV) {
+      dotenv.config({ path: '.env.' + process.env.NODE_ENV });
+    } else {
+      dotenv.config();
+    }
+
+    return TripAdvisorClient.connect({ 
+      base_url: process.env.ta_base_url,
+      client_id: process.env.ta_client_id,
+      secret: process.env.ta_secret
+    });
+  },
   getAllListings: (account) => {
     return new Promise((resolve, reject) => {
       let c = new Collection(account, Listing);
@@ -21,6 +36,16 @@ module.exports = {
           return L.get();
         })
       );
+    });
+  },
+  getListing: (accountId, listingId) => {
+    var L = new Listing(accountId, listingId);
+    return new Promise((resolve, reject) => {
+      L.get().then((Li) => {
+        resolve(L);
+      }).catch((err) => {
+        reject(err);
+      });
     });
   },
   getAccounts: () => {
@@ -49,6 +74,8 @@ module.exports = {
     });
   },
   updateTripadvisorReferences: (account) => {
+    module.exports.connect();
+
     return new Promise((resolve, reject) => {
       module.exports.getAllListings(account).then((Collection) => {
         var temps = [];
@@ -58,12 +85,15 @@ module.exports = {
           }
         });
 
+        console.log(temps.length);
+
         if (temps.length > 0) {
           let _u = (index) => {
             if (temps[index]) {
               console.log('Updating reference', temps[index].id());
               temps[index].updateReference(temps[index].id().substring(27)).then(() => {
                 index++;
+                sleep(5000);
                 _u(index);
               }).catch((err) => {
                 reject(err);

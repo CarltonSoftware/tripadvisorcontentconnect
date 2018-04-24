@@ -69,6 +69,7 @@ let TripAdvisorClient = (() => {
      * @return {String}
      */
     let _signature = (method, url, params, body, ts) => {
+
       let hash = CryptoJS.SHA512(
         [
           method,
@@ -80,7 +81,6 @@ let TripAdvisorClient = (() => {
       ).toString().toLowerCase();
 
       let sig = CryptoJS.HmacSHA512(hash, getOptions().secret).toString();
-
       return sig;
     };
 

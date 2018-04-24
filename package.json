@@ -6,7 +6,9 @@
   "scripts": {
     "test": "cross-env NODE_ENV=test mocha -R spec tests/*.js",
     "sandbox": "cross-env NODE_ENV=test node sandbox.js",
-    "sandboxprod": "cross-env NODE_ENV=prod node sandbox.js"
+    "updateReferences": "run-func src/Utils.js updateTripadvisorReferences $ACCOUNT_ID",
+    "sandboxprod": "cross-env NODE_ENV=prod node sandbox.js",
+    "getlisting": "run-func src/Utils.js getListing $ACCOUNT_ID $PROPERTY_ID"
   },
   "author": "Tabs Software",
   "license": "ISC",
@@ -17,11 +19,13 @@
     "locutus": "^2.0.9",
     "request": "^2.85.0",
     "request-promise-native": "^1.0.5",
+    "system-sleep": "^1.3.6",
     "to-iso-string": "0.0.2"
   },
   "devDependencies": {
     "cross-env": "^5.1.4",
     "mocha": "^5.0.5",
-    "mocha-testdata": "^1.2.0"
+    "mocha-testdata": "^1.2.0",
+    "run-func": "^1.0.2"
   }
 }

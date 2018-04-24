@@ -27,7 +27,7 @@ Collection.prototype.fetch = function() {
     }).catch((err) => {
       if (err.statusCode === 404) {
         reject(new Errors.GeneralError('Collection ' + t.path + ' not found'));
-      } else if (err.statusCode === 400) {
+      } else if (err.statusCode >= 400 && err.statusCode <= 499) {
         reject(new Errors.StatusError(err));
       } else {
         reject(err);
