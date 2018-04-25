@@ -20,6 +20,8 @@ module.exports = {
     });
   },
   getAllListings: (account) => {
+    module.exports.connect();
+
     return new Promise((resolve, reject) => {
       let c = new Collection(account, Listing);
       c.fetch().then((json) => {
@@ -30,6 +32,8 @@ module.exports = {
     });
   },
   getAllFullListings: (account) => {
+    module.exports.connect();
+
     return module.exports.getAllListings(account).then((Col) => {
       return Promise.all(
         Col.map((L) => {
@@ -38,17 +42,47 @@ module.exports = {
       );
     });
   },
-  getListing: (accountId, listingId) => {
+  getListing: (accountId, listingId, cb) => {
+    module.exports.connect();
+
     var L = new Listing(accountId, listingId);
     return new Promise((resolve, reject) => {
       L.get().then((Li) => {
+        if (module.exports[cb]) {
+          module.exports[cb](Li);
+        } else if (typeof cb === 'string') {
+          console.log(cb);
+        }
         resolve(L);
       }).catch((err) => {
         reject(err);
       });
     });
   },
+  deActivateListing: (accountId, listingId) => {
+    module.exports.connect();
+
+    var L = new Listing(accountId, listingId);
+    return new Promise((resolve, reject) => {
+      L.get().then((Li) => {
+        if (Li.active === true) {
+          Li.deactivate().then(() => {
+            console.log('Listing deactivated');
+            resolve(Li);
+          }).catch((err) => {
+            reject(err);   
+          });
+        } else {
+          reject(new Errors.GeneralError('Listing already deactivated')); 
+        }
+      }).catch((err) => {
+        reject(err);
+      });
+    });
+  },
   getAccounts: () => {
+    module.exports.connect();
+
     return new Promise((resolve, reject) => {
       TripAdvisorClient.getInstance().get().then((data) => {
         resolve(data.map((d) => {
@@ -62,6 +96,8 @@ module.exports = {
     });
   },
   getAccountIds: (account) => {
+    module.exports.connect();
+
     return new Promise((resolve, reject) => {
       module.exports.getAllListings(account).then((Collection) => {
         resolve(Collection.map((l) => {
@@ -111,5 +147,8 @@ module.exports = {
         reject(err);
       });
     });
+  },
+  log: (item) => {
+    console.log(item);
   }
 };

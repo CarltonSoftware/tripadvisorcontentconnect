@@ -145,7 +145,7 @@ let TripAdvisorClient = (() => {
       if (Object.keys(body).length > 0) {
         r.body = JSON.stringify(body);
       }
-
+      
       return r;
     };
 

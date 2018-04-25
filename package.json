@@ -8,7 +8,9 @@
     "sandbox": "cross-env NODE_ENV=test node sandbox.js",
     "updateReferences": "run-func src/Utils.js updateTripadvisorReferences $ACCOUNT_ID",
     "sandboxprod": "cross-env NODE_ENV=prod node sandbox.js",
-    "getlisting": "run-func src/Utils.js getListing $ACCOUNT_ID $PROPERTY_ID"
+    "getListing": "run-func src/Utils.js getListing $ACCOUNT_ID $PROPERTY_ID",
+    "deActivateListing": "run-func src/Utils.js deActivateListing $ACCOUNT_ID $PROPERTY_ID",
+    "getAccountIds": "run-func src/Utils.js getAccountIds"
   },
   "author": "Tabs Software",
   "license": "ISC",
