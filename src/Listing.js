@@ -658,14 +658,25 @@ function Listing(accountId, listingId) {
         reject(new Errors.AlreadyDeActive());
       }
 
-      this._update(
-        this.getPath(undefined, (toggleBool) ? 'activation' : 'deactivation')
-      ).then((response) => {
-        this.active = toggleBool;
-        resolve(response);
-      }).catch((error) => {
-        reject(error);
-      });
+      if (toggleBool === true) {
+        this._update(
+          this.getPath(undefined, 'activation')
+        ).then((response) => {
+          this.active = toggleBool;
+          resolve(response);
+        }).catch((error) => {
+          reject(error);
+        });
+      } else {
+        this._delete(
+          this.getPath(undefined, 'activation')
+        ).then((response) => {
+          this.active = toggleBool;
+          resolve(response);
+        }).catch((error) => {
+          reject(error);
+        });
+      }
     });
   };
 
