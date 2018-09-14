@@ -66,7 +66,11 @@ function Listing(accountId, listingId) {
       value = '"' + value.split('\r\n').join('\n').split('\n').join('\\n') + '"';
     }
     
-    eval(variable + '["' + key + '"] = ' + value + ';');
+    try {
+      eval(variable + '["' + key + '"] = ' + value + ';');
+    } catch(e) {
+
+    }
     return this;
   };
 
